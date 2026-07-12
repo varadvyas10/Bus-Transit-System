@@ -1,0 +1,13 @@
+RouteID,Source-Stop,Destination-Stop,Fare,Distance
+101,VNIT Campus,Sitabuldi Square,20,4.5
+102,Sitabuldi Square,Nagpur Junction,15,3.0
+103,VNIT Campus,Airport Hub,40,7.2
+104,VNIT Campus,Ramdaspeth,12,2.2
+105,Ramdaspeth,Nagpur Junction,18,4.0
+106,Airport Hub,Nagpur Junction,25,5.5
+107,Sitabuldi Square,Medical Square,10,2.5
+108,Medical Square,Nagpur Junction,12,2.8
+109,Nagpur Junction,Sadar Bazaar,15,3.5
+110,Sadar Bazaar,VNIT Campus,30,6.0
+111,Airport Hub,Mihan Tech Park,15,4.0
+112,Hingna Depot,VNIT Campus,10,3.2

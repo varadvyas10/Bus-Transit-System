@@ -1,0 +1,6 @@
+Ticket-ID,Passenger-Name,Source-Stop,Destination-Stop,Fare,Distance
+1,Pranav,1,9,450,300
+3,Ram,1,4,40,7.2,1) VNIT Campus to Airport Hub [Fare: 40 Rs]; 
+4,Hyj,1,3,30,6.2,1) VNIT Campus to Ramdaspeth [Fare: 12 Rs]; 2) Ramdaspeth to Nagpur Junction [Fare: 18 Rs]; 
+5,prt,3,1,45,9.5,1) Nagpur Junction to Sadar Bazaar [Fare: 15 Rs]; 2) Sadar Bazaar to VNIT Campus [Fare: 30 Rs]; 
+6,laksh,1,6,30,7,1) VNIT Campus to Sitabuldi Square [Fare: 20 Rs]; 2) Sitabuldi Square to Medical Square [Fare: 10 Rs]; 
