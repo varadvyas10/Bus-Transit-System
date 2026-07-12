@@ -27,9 +27,9 @@ The project is structured modularly following strict Object-Oriented Programming
 
 ---
 ## Sample Ticket 
-==========================================
+'=========================================='
        TICKET BOOKED SUCCESSFULLY!        
-==========================================
+'=========================================='
 TICKET ID      : 1
 PASSENGER NAME : Pranav
 TOTAL DISTANCE : 6.2 km
@@ -38,7 +38,7 @@ TOTAL FARE     : 30 Rs
 TRAVEL ITINERARY ROUTE BREAKDOWN:
 1) VNIT Campus to Ramdaspeth [Fare: 12 Rs]
 2) Ramdaspeth to Nagpur Junction [Fare: 18 Rs]
-==========================================
+'=========================================='
 
 ## 📦 Sample Dataset & Test Cases
 
