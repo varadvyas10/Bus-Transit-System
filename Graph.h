@@ -10,6 +10,7 @@
 #include <sstream>
 #include <iostream>
 #include <climits>
+#include <string>
 using namespace std;
 
 class graph {
@@ -19,22 +20,28 @@ private:
     unordered_map<int, float> dist;
     unordered_map<int, int> fare;
     unordered_map<int, int> parent;
+    unordered_map<int, int> edgeFareUsed;
+    unordered_map<int, float> edgeDistUsed;
 
 public:
-    void AddStop(stop s) {
+    bool AddStop(stop s) {
+        if (stops.find(s.getStopID()) != stops.end()) return false; // duplicate ID
         stops.insert({s.getStopID(), s});
-    }
-    
-    void AddRoute(Route r) {
-        int SourceID = r.getSource().getStopID();
-        adjlist[SourceID].push_back(r);
+        return true;
     }
 
+    bool AddRoute(Route r) {
+        int srcID = r.getSource().getStopID();
+        int destID = r.getDestination().getStopID();
+        if (stops.find(srcID) == stops.end() || stops.find(destID) == stops.end()) return false;
+        adjlist[srcID].push_back(r);
+        return true;
+    }
+
+   
     stop* SearchStopbyID(int id) {
-        for (auto &r : stops) {
-            if (r.first == id) return &(r.second);
-        }
-        return nullptr;
+        auto it = stops.find(id);
+        return (it != stops.end()) ? &(it->second) : nullptr;
     }
 
     string tolowercase(string s) {
@@ -60,11 +67,13 @@ public:
             dist[b.first] = INT_MAX;
             fare[b.first] = INT_MAX;
             parent[b.first] = -1;
+            edgeFareUsed[b.first] = -1;
+            edgeDistUsed[b.first] = -1.0f;
         }
         dist[StartID] = 0;
         fare[StartID] = 0;
 
-        priority_queue<pair<float, int>, vector<pair<float, int>>, greater<pair<float, int> > > pq;
+        priority_queue<pair<float, int>, vector<pair<float, int>>, greater<pair<float, int>>> pq;
         pq.push({0, StartID});
 
         while (!pq.empty()) {
@@ -73,14 +82,21 @@ public:
             int u = topNode.second;
             pq.pop();
 
-            if (CurrDist > dist[u]) continue;
-            for (auto &edge : adjlist[u]) {
+            if (CurrDist > dist[u]) continue; // stale heap entry (lazy deletion) — skip
+
+            
+            auto adjIt = adjlist.find(u);
+            if (adjIt == adjlist.end()) continue;
+
+            for (auto &edge : adjIt->second) {
                 int v = edge.getDestination().getStopID();
                 float weight = edge.getDistance();
                 int farex = edge.getFare();
                 if (weight + dist[u] < dist[v]) {
                     dist[v] = weight + dist[u];
                     fare[v] = farex + fare[u];
+                    edgeFareUsed[v] = farex;   // this edge's own fare, not the cumulative total
+                    edgeDistUsed[v] = weight;
                     pq.push({dist[v], v});
                     parent[v] = u;
                 }
@@ -98,6 +114,16 @@ public:
         }
         reverse(path.begin(), path.end());
         return make_tuple(path, dist[EndID], fare[EndID]);
+    }
+
+    int getLastEdgeFare(int stopID) {
+        auto it = edgeFareUsed.find(stopID);
+        return (it != edgeFareUsed.end()) ? it->second : -1;
+    }
+
+    float getLastEdgeDist(int stopID) {
+        auto it = edgeDistUsed.find(stopID);
+        return (it != edgeDistUsed.end()) ? it->second : -1.0f;
     }
 
     void PrintShortestPath(int StartID, int EndID) {
@@ -122,15 +148,19 @@ public:
         ifstream read(filename);
         if (!read.is_open()) return;
         string line;
-        getline(read, line); 
+        getline(read, line);
         while (getline(read, line)) {
             stringstream ss(line);
             string id, stopname;
             getline(ss, id, ',');
             getline(ss, stopname);
             if (id.empty() || stopname.empty()) continue;
-            stop s(stoi(id), stopname);
-            stops.insert({stoi(id), s});
+            try {
+                stop s(stoi(id), stopname);
+                stops.insert({stoi(id), s});
+            } catch (const exception &e) {
+                cout << "Skipping malformed stop row: " << line << "\n";
+            }
         }
         read.close();
     }
@@ -139,21 +169,25 @@ public:
         ifstream read(filename);
         if (!read.is_open()) return;
         string line;
-        getline(read, line); 
+        getline(read, line);
         while (getline(read, line)) {
             stringstream ss(line);
-            string rid, source, destination, fare, distance;
+            string rid, source, destination, fareStr, distance;
             getline(ss, rid, ',');
             getline(ss, source, ',');
             getline(ss, destination, ',');
-            getline(ss, fare, ',');
+            getline(ss, fareStr, ',');
             getline(ss, distance);
-            if (rid.empty() || source.empty() || destination.empty() || fare.empty() || distance.empty()) continue;
+            if (rid.empty() || source.empty() || destination.empty() || fareStr.empty() || distance.empty()) continue;
             stop *s = SearchStopbyName(source);
             stop *d = SearchStopbyName(destination);
             if (s && d) {
-                Route r(stoi(rid), *s, *d, stoi(fare), stof(distance));
-                adjlist[s->getStopID()].push_back(r);
+                try {
+                    Route r(stoi(rid), *s, *d, stoi(fareStr), stof(distance));
+                    adjlist[s->getStopID()].push_back(r);
+                } catch (const exception &e) {
+                    cout << "Skipping malformed route row: " << line << "\n";
+                }
             }
         }
         read.close();
@@ -192,11 +226,12 @@ public:
     }
 
     void DisplayRoutefromStop(int StopID) {
-        if (adjlist.find(StopID) == adjlist.end()) {
+        auto it = adjlist.find(StopID);
+        if (it == adjlist.end()) {
             cout << "No routes available from this stop.\n";
             return;
         }
-        for (auto &r : adjlist[StopID]) {
+        for (auto &r : it->second) {
             cout << "To -> " << r.getDestination().getStopName() << " | Dist: " << r.getDistance() << "km | Fare: " << r.getFare() << "rs\n";
         }
     }
